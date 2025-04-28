@@ -85,7 +85,7 @@ namespace Identity.API.Controllers
             return result.Succeeded ? Ok($"Role '{roleName}' deleted.") : BadRequest(result.Errors);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "ITAdminOnly")]
         [HttpPost("assign-role-to-user")]
         public async Task<IActionResult> AssignRole([FromBody] RoleAssignmentDto dto)
         {
