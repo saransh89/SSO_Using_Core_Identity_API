@@ -1,6 +1,7 @@
 ﻿using Identity.Application.Contracts;
 using Identity.Domain.Entities;
 using Identity.Shared.DTOs;
+using Identity.Shared.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,16 +41,39 @@ public class AuthService : IAuthService
         return new AuthResponseDto { IsSuccessful = true, Token = token };
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     public async Task<AuthResponseDto> LoginAsync(LoginDto model)
     {
         var user = await _userManager.FindByEmailAsync(model.Email);
+
         if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
         {
-            return new AuthResponseDto { IsSuccessful = false, Errors = new[] { "Invalid credentials." } };
+            return new AuthResponseDto
+            {
+                IsSuccessful = false,
+                Errors = new[] { "Invalid credentials." }
+            };
         }
 
-        var token = await _tokenService.GenerateTokenAsync(user);
-        return new AuthResponseDto { IsSuccessful = true, Token = token };
+        var userRoles = await _userManager.GetRolesAsync(user);
+        string? jobName = null;
+
+        if (userRoles != null && userRoles.Contains(EnumUserRoles.MachineJobsRunner.GetDisplayName()))
+        {
+            jobName = JobName.AuditLogArchiver.ToClaimValue();
+        }
+
+        var token = await _tokenService.GenerateTokenAsync(user, jobName);
+
+        return new AuthResponseDto
+        {
+            IsSuccessful = true,
+            Token = token
+        };
     }
 
     public async Task<List<ApplicationUser>> GetAllUsersAsync()

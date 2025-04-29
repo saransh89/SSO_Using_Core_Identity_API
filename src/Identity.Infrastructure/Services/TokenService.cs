@@ -25,7 +25,7 @@ namespace Identity.Infrastructure.Services
             _userManager = userManager;
         }
 
-        public async Task<string> GenerateTokenAsync(ApplicationUser user)
+        public async Task<string> GenerateTokenAsync(ApplicationUser user, string jobName = null)
         {
             // Retrieve the roles assigned to the user
             var roles = await _userManager.GetRolesAsync(user);
@@ -35,8 +35,14 @@ namespace Identity.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("Department", "IT")  // <-- Important custom claim
+                new Claim("Department", user.Department ?? "General") // If Department is null, use "General"
             };
+
+            // Add jobName claim if jobName is not null
+            if (!string.IsNullOrWhiteSpace(jobName))
+            {
+                claims.Add(new Claim("JobName", jobName));
+            }
 
             // Include role claims for [Authorize(Roles = "...")]
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -53,5 +59,6 @@ namespace Identity.Infrastructure.Services
 
             return await Task.FromResult(new JwtSecurityTokenHandler().WriteToken(token));
         }
+
     }
 }

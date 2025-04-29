@@ -9,6 +9,6 @@ namespace Identity.Application.Contracts
 {
     public interface ITokenService
     {
-        Task<string> GenerateTokenAsync(ApplicationUser user);
+        Task<string> GenerateTokenAsync(ApplicationUser user, string? jobName = null);
     }
 }

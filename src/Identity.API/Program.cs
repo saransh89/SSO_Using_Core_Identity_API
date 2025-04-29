@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Identity.Shared.Enums;
+using Identity.Shared.Helper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,10 +53,24 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("Department", "IT"));
 });
 
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("BackgroundJobsOnly", policy =>
+    {
+        policy.RequireAssertion(context =>
+                context.User.HasClaim(c =>
+                    c.Type == "JobName" && BackgroundJobPolicies.AllowedJobs.Contains(c.Value))
+            );
+    });
+});
+
+
 // 💼 Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // 📄 Add Swagger + JWT Auth Support
 builder.Services.AddSwaggerGen(c =>

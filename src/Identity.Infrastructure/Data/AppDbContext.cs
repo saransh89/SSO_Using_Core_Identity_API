@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
         _currentUserService = currentUserService;
     }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<AuditLogArchive> AuditLogArchives { get; set; }
 
 
     /// <summary>
