@@ -10,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using Identity.Shared.Enums;
 using Identity.Shared.Helper;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +66,10 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddHangfire(config =>
+    config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer(); // Adds background processing
+
 
 // 💼 Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -115,5 +120,15 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseHangfireDashboard(); // Hangfire UI at /hangfire
+
+RecurringJob.AddOrUpdate<IAuditLogService>(
+    recurringJobId: "archive-audit-logs-job",
+    methodCall: job => job.ArchiveAuditLogsAsync(null),
+    cronExpression: Cron.Minutely,
+    options: new RecurringJobOptions
+    {
+        TimeZone = TimeZoneInfo.Local
+    });
 
 app.Run();

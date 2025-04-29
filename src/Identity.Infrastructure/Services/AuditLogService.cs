@@ -41,9 +41,9 @@ namespace Identity.Infrastructure.Services
         public async Task<int> ArchiveAuditLogsAsync(DateTime? olderThan = null)
         {
             //0) Get the Last Update date in AuditLogsArchive
-            if(olderThan== null)
+            if(olderThan== null || olderThan == DateTime.MinValue)
             {
-                olderThan = await GetLastArchivedDateAsync();
+                olderThan = DateTime.UtcNow.AddDays(-1);//await GetLastArchivedDateAsync();
             }
             // 1) Select the rows to archive
             var toArchive = await _db.AuditLogs
