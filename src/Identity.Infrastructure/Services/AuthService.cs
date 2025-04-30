@@ -20,6 +20,7 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterUserDto model)
     {
+        //throw new InvalidOperationException("Simulated server error");
         var user = new ApplicationUser
         {
             UserName = model.Email,

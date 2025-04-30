@@ -205,6 +205,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add custom exception middleware
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.MapControllers();
 
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
