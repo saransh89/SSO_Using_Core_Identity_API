@@ -36,7 +36,13 @@ namespace Identity.Infrastructure.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim("Department", user.Department ?? "General") // If Department is null, use "General"
+
             };
+
+            if (roles != null && roles.Any())
+            {
+                claims.AddRange(roles.Select(role => new Claim("Role", role)));
+            }
 
             // Add jobName claim if jobName is not null
             if (!string.IsNullOrWhiteSpace(jobName))
@@ -45,7 +51,7 @@ namespace Identity.Infrastructure.Services
             }
 
             // Include role claims for [Authorize(Roles = "...")]
-            claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            //claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
