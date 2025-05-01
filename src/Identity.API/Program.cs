@@ -13,6 +13,10 @@ using Identity.Shared.Helper;
 using Hangfire;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using Hangfire.Logging;
+using Serilog;
+using Serilog.Sinks.Network;
+using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -188,6 +192,18 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.TCPSink("tcp://localhost", 5000, new JsonFormatter())
+    .CreateLogger();
+
+//builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((ctx, lc) => lc
+    .ReadFrom.Configuration(ctx.Configuration));
+// Use Serilog instead of default logging
+builder.Host.UseSerilog();
+
 var app = builder.Build();
 
 // 🌐 Middleware
@@ -226,5 +242,9 @@ RecurringJob.AddOrUpdate<IAuditLogService>(
     {
         TimeZone = TimeZoneInfo.Local
     });
+
+
+// Add this line early in the pipeline
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.Run();
